@@ -1,48 +1,42 @@
 import pybullet as p
+import math
 import time
-import pkgutil
-egl = pkgutil.get_loader('eglRenderer')
 import pybullet_data
-
-p.connect(p.GUI)
+physics_client = p.connect(p.GUI)
 p.setAdditionalSearchPath(pybullet_data.getDataPath())
-plugin = p.loadPlugin(egl.get_filename(), "_eglRendererPlugin")
-print("plugin=", plugin)
+p.setGravity(0, 0, -9.81)
+distance = 100000
+start_pos = [0, 0, 1]
+start_orientation = p.getQuaternionFromEuler([0, 0, 0])
+img_w, img_h = 120, 80
+p.loadURDF("plane.urdf")
+r = p.loadURDF("r2d2.urdf", start_pos, start_orientation)
 
-p.setGravity(0, 0, -10)
-p.loadURDF("plane.urdf", [0, 0, -1])
-p.loadURDF("r2d2.urdf")
-
-pixelWidth = 320
-pixelHeight = 220
-camTargetPos = [0, 0, 0]
-camDistance = 4
-pitch = -10.0
-roll = 0
-upAxisIndex = 2
-
-while (p.isConnected()):
-    start = time.time()
+while True:
     p.stepSimulation()
-    stop = time.time()
-    print("stepSimulation %f" % (stop - start))
-    p.getBasePositionAndOrientation(
+    robot_position, robot_orientation = p.getBasePositionAndOrientation(r)
 
-    viewMatrix = p.computeViewMatrixFromYawPitchRoll(camTargetPos, camDistance, yaw, pitch, roll,
-                                                        upAxisIndex)
-    projectionMatrix = [
-        1.0825318098068237, 0.0, 0.0, 0.0, 0.0, 1.732050895690918, 0.0, 0.0, 0.0, 0.0,
-        -1.0002000331878662, -1.0, 0.0, 0.0, -0.020002000033855438, 0.0
-    ]
+    yaw = p.getEulerFromQuaternion(robot_orientation)[-1]
+    xA, yA, zA = robot_position
+    zA = zA + 0.3 # make the camera a little higher than the robot
 
-    start = time.time()
-    img_arr = p.getCameraImage(pixelWidth,
-                                pixelHeight,
-                                viewMatrix=viewMatrix,
-                                projectionMatrix=projectionMatrix,
-                                shadow=1,
-                                lightDirection=[1, 1, 1])
-    stop = time.time()
-    print("renderImage %f" % (stop - start))
+    # compute focusing point of the camera
+    xB = xA + math.cos(yaw) * distance
+    yB = yA + math.sin(yaw) * distance
+    zB = zA
 
-p.unloadPlugin(plugin)
+    view_matrix = p.computeViewMatrix(
+                        cameraEyePosition=[xA, yA, zA],
+                        cameraTargetPosition=[xB, yB, zB],
+                        cameraUpVector=[0, 0, 1.0]
+                    )
+
+    projection_matrix = p.computeProjectionMatrixFOV(
+                            fov=90, aspect=1.5, nearVal=0.02, farVal=3.5)
+
+    imgs = p.getCameraImage(img_w, img_h,
+                            view_matrix,
+                            projection_matrix, shadow=True,
+                            renderer=p.ER_BULLET_HARDWARE_OPENGL)
+
+    time.sleep(1./240.)
