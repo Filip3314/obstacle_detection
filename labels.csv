@@ -1,0 +1,5 @@
+filename,category
+table_0,Object(category='table', name='table', filepath='table/table.urdf', scale=[1, 1, 1])
+table_1,Object(category='table', name='table', filepath='table/table.urdf', scale=[1, 1, 1])
+cat_2_0,Object(category='cat', name='cat_2', filepath='cat_2/source/12221_Cat_v1_l3.obj', scale=[0.01, 0.01, 0.01])
+cat_2_1,Object(category='cat', name='cat_2', filepath='cat_2/source/12221_Cat_v1_l3.obj', scale=[0.01, 0.01, 0.01])
