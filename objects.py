@@ -1,18 +1,50 @@
-from enum import Enum
+from enum import Enum, auto
 
-Category = Enum(
-    "Category", ["table", "cat", "dog", "teddy", "human", "plate", "cup", "pan"]
-)
+import pybullet as p
+
+TABLE_HEIGHT = 1
+
+
+class Category(Enum):
+    # Value of the enum is the size range that the object should be in, relative to the size of a standard table model
+    HUMAN = auto(), [.5, 1.5]
+    CAT = auto(), [0.1, 0.2]
+    DOG = auto(), [0.1, 0.3]
+    KITCHEN_TABLE = auto(), [.9, 1.1]
+    KITCHEN_CHAIR = auto(), [.9, 1.2]
+    STAIRS = auto(), [2, 3]
+    SOFA = auto(), [.9, 1.1]
+    ARMCHAIR = auto(), [0.9, 1.1]
+    BED = auto(), [.3, .5]
+    LAMP = auto(), [1, 2]
+    DOOR = auto(), [2, 2.5]
+    TOILET = auto(), [.7, .9]
+    DRESSER = auto(), [.8, 1]
+    SHOES = auto(), [.05, .1]
+    CARPET = auto(), [0.005, 0.01]
+    LAUNDRY_BASKET = auto(), [0.5, 1]
+    COFFEE_TABLE = auto(), [0.4, 0.5]
+    CAT_TREE = auto(), [0.5, 2]
+    TV_STAND = auto(), [0.3, 0.5]
+    SHELF = auto(), [1.5, 2.5]
+    DESK = auto(), [.9, 1.2]
+    DESK_CHAIR = auto(), [1, 1.2]
+    TEDDY = auto(), [0.05, 0.15]
+
+    def __init__(self, value, scale):
+        self.value = value
+        self.scale = scale
 
 
 class Object:
-    def __init__(self, category: Category, name: str, filepath: str, scale: list[int] = (1, 1, 1)):
-        self.category = category
-        self.name = name
+    def __init__(self, filepath: str, scale: list[int] = (1, 1, 1)):
+        split_path = filepath.split('/')
+        self.category = split_path[0]
+        self.name = split_path[1]
         self.filepath = filepath
         self.scale = scale
 
-    def load(self, p, position=(1,1,1), orientation=(1, 1, 1, 1)):
+    def load(self, loaded_objects):
         if ".obj" in self.filepath:
             visualShapeId = p.createVisualShape(
                 shapeType=p.GEOM_MESH,
@@ -31,18 +63,6 @@ class Object:
         else:
             objectId = p.loadURDF(self.filepath)
 
-        return objectId
+        loaded_objects[objectId] = self.category
 
-OBJECTS = [
-    Object("table", "table", "table/table.urdf"),
-    Object("cat", "cat_2", "cat_2/source/12221_Cat_v1_l3.obj", [.01, .01, .01]),
-    #    Object("cat", "cat_1", "cat_1/source/model.obj"),
-    #   Object("table", "table_square", "table_square/table_square.urdf"),
-    #   Object("human", "human", "humanoid.urdf"),
-    #   Object("teddy", "teddy", "teddy_large.urdf"),
-    #   Object("plate", "plate", "dinnerware/plate.urdf"),
-    #   Object("cup", "cup", "dinnerware/cup/cup_small.urdf"),
-    #   Object("pan", "pan", "dinnerware/pan_tefal.urdf"),
-    #             Object('dog', 'dog_1/source/*.obj'),
-    #             Object('dog', 'dog_2/source/*.obj'),
-]
+        return objectId, loaded_objects

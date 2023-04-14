@@ -1,5 +1,5 @@
 # project specific
-models/
+data_models/
 pybullet_models/
 
 # Byte-compiled / optimized / DLL files

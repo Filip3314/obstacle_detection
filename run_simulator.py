@@ -86,8 +86,11 @@ if __name__ == '__main__':
     robot = setup_simulator()
     #p.loadSDF('pybullet_models/kitchens/1.sdf')
     p.loadURDF("plane.urdf")
-    objects.OBJECTS[0].load(p)
-    objects.OBJECTS[1].load(p)
+    cup = p.loadURDF("data_models/dinnerware/cup/cup_small.urdf")
+    table1 = p.loadURDF("data_models/KITCHEN_TABLE/table/table.urdf")
+    table2 = p.loadURDF("data_models/KITCHEN_TABLE/table/table.urdf", globalScaling=2)
+    bounds = np.array(p.getAABB(table1))
+    print(bounds[1] - bounds[0])
     while True:
         run_simulator(robot)
 
