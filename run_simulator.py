@@ -17,8 +17,8 @@ from pybullet_envs.bullet.racecar import Racecar
 
 import objects
 
-IMAGE_HEIGHT = 160
-IMAGE_WIDTH = 240
+IMAGE_HEIGHT = 256
+IMAGE_WIDTH = 256
 FAR = 500
 NEAR = 0.005
 DISTANCE = 100
@@ -86,11 +86,8 @@ if __name__ == '__main__':
     robot = setup_simulator()
     #p.loadSDF('pybullet_models/kitchens/1.sdf')
     p.loadURDF("plane.urdf")
-    cup = p.loadURDF("data_models/dinnerware/cup/cup_small.urdf")
-    table1 = p.loadURDF("data_models/KITCHEN_TABLE/table/table.urdf")
-    table2 = p.loadURDF("data_models/KITCHEN_TABLE/table/table.urdf", globalScaling=2)
-    bounds = np.array(p.getAABB(table1))
-    print(bounds[1] - bounds[0])
+    table_id, _ = objects.Object('data_models/KITCHEN_TABLE/table/table.obj', 1).load({})
+    p.resetBasePositionAndOrientation(table_id, [2, 2, 2], [1, 1, 1, 1])
     while True:
         run_simulator(robot)
 

@@ -5,7 +5,8 @@ from PIL import Image
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from objects import Category
+from objects import Category, Object
+from record_heights import HEIGHT_FILE
 from run_simulator import setup_simulator, run_simulator, NEAR, FAR, IMAGE_HEIGHT, IMAGE_WIDTH
 
 IMAGE_FOLDER = "data"
@@ -15,8 +16,12 @@ LABEL_FILE = "labels.csv"
 LABEL_DIR = IMAGE_FOLDER + "/" + "label"
 
 
-#TODO add randomization of position of objects
-#TODO get more data_models
+def linearize_depth(depth_matrix: np.ndarray[float]):
+    return (FAR * NEAR / (FAR - (FAR - NEAR) * depth_matrix)).astype(np.uint8)
+
+
+# TODO add randomization of position of objects
+# TODO get more data_models
 
 robot = setup_simulator()
 
@@ -33,13 +38,16 @@ else:
         filepath = os.path.join(DEPTH_DIR, file)
         os.remove(filepath)
 
-objects = []
-#FIXE LOAD OBJECTS
-loaded_objects = {}
+if os.path.exists(LABEL_FILE):
+    os.remove(LABEL_FILE)
+heights = np.loadtxt(HEIGHT_FILE, dtype=str, delimiter=',')
+objects = [Object(file, float(height)) for file, height in heights]
+# FIXME LOAD OBJECTS
+loaded_object_categories = {-1: 0}
 
 # Capture and label the images
 for obj in objects:
-    object_id, loaded_objects = obj.load(loaded_objects)
+    object_id, loaded_object_categories = obj.load(loaded_object_categories)
     for i in range(2):
         position = [1, 0, 0]
         orientation = R.random().as_quat()
@@ -51,22 +59,20 @@ for obj in objects:
         rgb = np.reshape(imgs[2], (IMAGE_HEIGHT, IMAGE_WIDTH, 4))
         rgb = rgb.astype(np.uint8)
         depth = np.reshape(imgs[3], [IMAGE_HEIGHT, IMAGE_WIDTH])
-        depth = FAR * NEAR / (FAR - (FAR - NEAR) * depth)
-        depth = depth.astype(np.uint8)
-        segmentation_list = map(lambda pixel_object_id: loaded_objects[pixel_object_id].category, imgs[3])
-        counts = {}
+        depth = linearize_depth(depth)
+        segmentation_list = list(map(lambda pixel_object_id: loaded_object_categories[int(pixel_object_id)], imgs[4]))
+        counts = {category.value: 0 for category in Category}
         for pixel in segmentation_list:
-            counts[Category(pixel)] += 1
-        for key, value in enumerate(counts):
-            counts[key] = value / (IMAGE_HEIGHT * IMAGE_WIDTH)
+            counts[pixel] += 1
+        proportions = {category: (count / (IMAGE_HEIGHT * IMAGE_WIDTH)) for category, count in counts.items()}
         segmentation_map = np.reshape(segmentation_list, [IMAGE_HEIGHT, IMAGE_WIDTH])
         rgb_image = Image.fromarray(rgb)
         depth_image = Image.fromarray(depth)
-        np.savetxt(f"{LABEL_DIR}/{filename}_labels.csv", segmentation_map, delimiter=',')
+        np.savetxt(f"{LABEL_DIR}/{filename}_labels.csv", segmentation_map, fmt='%d', delimiter=',')
         rgb_image.save(f"{RGB_DIR}/{filename}_rgb.png")
         depth_image.save(f"{DEPTH_DIR}/{filename}_depth.png")
         with open(LABEL_FILE, "a") as f:
-            f.write(f"{filename},{obj}\n")
+            f.write(filename + ',' + str(proportions) + '\n')
         time.sleep(1)
     p.removeBody(object_id)
     time.sleep(0.1)
