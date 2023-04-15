@@ -16,7 +16,7 @@ from run_simulator import setup_simulator, run_simulator, NEAR, FAR, IMAGE_HEIGH
 IMAGE_FOLDER = "data"
 RGB_DIR = IMAGE_FOLDER + "/" + "rgb"
 DEPTH_DIR = IMAGE_FOLDER + "/" + "depth"
-LABEL_FILE = "labels.csv"
+LABEL_FILE = "labels.txt"
 LABEL_DIR = IMAGE_FOLDER + "/" + "label"
 
 
@@ -47,6 +47,7 @@ if os.path.exists(LABEL_FILE):
 heights = np.loadtxt(HEIGHT_FILE, dtype=str, delimiter=',')
 objects = [Object(file, float(height)) for file, height in heights]
 loaded_object_categories = {-1: 0}
+img_number = 0
 
 # Capture and label the images
 for obj in objects:
@@ -74,11 +75,12 @@ for obj in objects:
         #Saving all of our data
         rgb_image = Image.fromarray(rgb)
         depth_image = Image.fromarray(depth)
-        np.savetxt(f"{LABEL_DIR}/{filename}_labels.csv", segmentation_map, fmt='%d', delimiter=',')
-        rgb_image.save(f"{RGB_DIR}/{filename}_rgb.png")
-        depth_image.save(f"{DEPTH_DIR}/{filename}_depth.png")
+        rgb_image.save(f"{RGB_DIR}/{img_number}_rgb.png")
+        depth_image.save(f"{DEPTH_DIR}/{img_number}_depth.png")
+        np.savetxt(f"{LABEL_DIR}/{img_number}_labels.csv", segmentation_map, fmt='%d', delimiter=',')
         with open(LABEL_FILE, "a") as f:
-            f.write(filename + ',' + str(proportions) + '\n')
+            f.write(str(proportions) + '\n')
+        img_number += 1
     p.removeBody(object_id)
 
 # Disconnect PyBullet

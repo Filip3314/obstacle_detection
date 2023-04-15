@@ -1,3 +1,4 @@
+import ast
 import os
 
 import numpy as np
@@ -45,10 +46,13 @@ class PybulletDataset(Dataset):
 class ClassificationDataset(PybulletDataset):
     """For use in training an image classification model on the PyBullet images. Each label is a matrix with length equal
     to the number of categories"""
-    def __init__(self, rgb_dir: str = 'data/rgb', depth_dir: str = 'data/depth', labels_file: str = 'labels.csv',
+    def __init__(self, rgb_dir: str = 'data/rgb', depth_dir: str = 'data/depth', labels_file: str = 'labels.txt',
                  transform=None):
         super().__init__(rgb_dir, depth_dir, transform)
-        self.labels = sorted(np.loadtxt(labels_file))
+        self.labels = []
+        with open('labels.txt') as file:
+            for line in file:
+                self.labels.append(ast.literal_eval(line))
 
     def __getitem__(self, item: int):
         label = self.labels[item]
@@ -67,5 +71,6 @@ class SegmentationDataset(PybulletDataset):
 
     def __getitem__(self, item: int):
         label_path = os.path.join(self.label_dir, self.label_filenames[item])
-        label = np.loadtxt(label_path)
+        label = np.loadtxt(label_path, dtype=int)
         return super().__getitem__(item), label
+
