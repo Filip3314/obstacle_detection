@@ -23,8 +23,8 @@ FAR = 500
 NEAR = 0.005
 DISTANCE = 100
 
-def setup_simulator():
-    p.connect(p.GUI)
+def setup_simulator(gui: int = p.GUI):
+    p.connect(gui)
     p.setAdditionalSearchPath('pybullet_models')  # Set path to load URDFs
     p.setGravity(0, 0, -9.81)
     return Racecar(p)
@@ -86,8 +86,9 @@ if __name__ == '__main__':
     robot = setup_simulator()
     #p.loadSDF('pybullet_models/kitchens/1.sdf')
     p.loadURDF("plane.urdf")
-    table_id, _ = objects.Object('data_models/KITCHEN_TABLE/table/table.obj', 1).load({})
-    p.resetBasePositionAndOrientation(table_id, [2, 2, 2], [1, 1, 1, 1])
+    objid, _ = objects.Object('data_models/CAT/cat2/source/12221_Cat_v1_l3.obj', 30).load({})
+    p.removeBody(objid)
+    objects.Object('data_models/TEDDY/teddy1/teddy1.urdf', 0.68).load({})
     while True:
         run_simulator(robot)
 

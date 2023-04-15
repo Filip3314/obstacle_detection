@@ -1,5 +1,6 @@
-data_models/CAT/cat_2/source/12221_Cat_v1_l3.obj, 37.61129841934516
-data_models/CAT/cat_1/source/model.obj, 13.986882976531984
-data_models/COFFEE_TABLE/table_square/table.obj, 1.004
-data_models/KITCHEN_TABLE/table/table.obj, 1.004
-data_models/KITCHEN_TABLE/table/table2.obj, 1.004
+data_models/TEDDY/teddy1/teddy1.urdf, 1.8902510670870543
+data_models/DOG/dog1/source/harvey_for_SF.obj, 3.8757508316040035
+data_models/DOG/dog2/source/12228_Dog_v1_L2.obj, 35.48729935967921
+data_models/CAT/cat1/source/model.obj, 13.986882976531984
+data_models/CAT/cat2/source/12221_Cat_v1_l3.obj, 37.61129841934516
+data_models/KITCHEN_TABLE/kitchen_table1/kitchen_table1.urdf, 0.63
