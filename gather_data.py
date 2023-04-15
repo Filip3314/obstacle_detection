@@ -1,7 +1,9 @@
 #ROADMAP
-#TODO
+#TODO GET MORE MODELS
+#TODO SUPPORT POSITION RANDOMIZATION
+#TODO SUPPORT MULTIPLE OBJECT SPAWNING
+#TODO SUPPORT OBJECT TRANSFORMS
 import pybullet as p
-import time
 import os
 from PIL import Image
 import numpy as np

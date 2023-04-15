@@ -3,15 +3,16 @@ from enum import Enum
 import numpy as np
 import pybullet as p
 
-TABLE_HEIGHT = 1
+TABLE_HEIGHT = 0.68
 
 
 class Category(Enum):
-    # Value of the enum is the size range that the object should be in, relative to the size of a standard kitchen_table1 model
-    NONE = [0, 0, 0]
+    # Value is how tall that category of object should be, compared to the height of a table that
+    # we've chosen as the standard
+    NONE = [0, 0]
     HUMAN = [.5, 1.5]
-    CAT = [0.1, 0.2]
-    DOG = [0.1, 0.3]
+    CAT = [0.2, 0.3]
+    DOG = [0.2, 0.4]
     KITCHEN_TABLE = [.9, 1.1]
     KITCHEN_CHAIR = [.9, 1.2]
     STAIRS = [2, 3]
