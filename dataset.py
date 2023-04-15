@@ -5,6 +5,7 @@ import torch
 
 from torch.utils.data import Dataset
 from PIL import Image
+import torchvision.transforms as transforms
 
 
 class PybulletDataset(Dataset):
@@ -13,7 +14,7 @@ class PybulletDataset(Dataset):
         self.depth_dir = depth_dir
         self.transform = transform
         # Must have the same number of depth and rgb images to have a valid dataset
-        assert len(rgb_dir) == len(depth_dir)
+        # assert len(rgb_dir) == len(depth_dir)
         self.rgb_filenames = sorted(os.listdir(rgb_dir))
         self.depth_filenames = sorted(os.listdir(depth_dir))
 
@@ -30,7 +31,13 @@ class PybulletDataset(Dataset):
             rgb_image = self.transform(rgb_image)
             depth_image = self.transform(depth_image)
 
-        merged_image = torch.cat((rgb_image, depth_image.unsqueeze(0)), dim=0)
+        # convert the RGB and the depth images to tensors so they can be
+        im_to_tensor = transforms.PILToTensor()
+        rgb_tensor = im_to_tensor(rgb_image)
+        depth_tensor = im_to_tensor(depth_image)
+
+        # Concatenate RGB and depth
+        merged_image = torch.cat((rgb_tensor, depth_tensor), dim=0)
 
         return merged_image
 

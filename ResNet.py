@@ -43,6 +43,21 @@ class ResNet(nn.Module):
         self.save_path = "VGG_Net_" + img_type + ".pt"
 
     def forward(self, img: Tensor) -> Tensor:
+        # Going to slice up the image so I can take the channels that are relevant for this model
+        # Assumes that the color channels are in dim 1 since dim 0 should now be the batch. Check this
+        # first if getting errors
+        R_slice = torch.select(img, 1, 0)
+        G_slice = torch.select(img, 1, 1)
+        B_slice = torch.select(img, 1, 2)
+        D_slice = torch.select(img, 1, 3)
+
+        # RGBD images remain unchanged. This should handle re-assembling the tensor for the other
+        # image types
+        if self.img_type == "RGB":
+            img = torch.cat((R_slice.unsqueeze(1), G_slice.unsqueeze(1), B_slice.unsqueeze(1)), dim=1)
+        if self.img_type == "depth":
+            img = D_slice.unsqueeze(1)
+
         return self.pre_trained_model(img)
 
     def save(self) -> None:

@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 import ResNet as rn
 import VGGNet as vgn
 import New_FC as nfc
+import dataset
 
 
 # I am going to write something so that it can train all three of the models
@@ -18,8 +19,10 @@ import New_FC as nfc
 # All equivalent
 def train_models():
     # Load in the datasets
-    train_data = Dataset()
-    val_data = Dataset()
+    # TODO add the appropriate file paths once they are available
+    # TODO make sure that the training and validation data re appropriately split
+    train_data = dataset.ClassificationDataset()
+    val_data = dataset.ClassificationDataset()
     train_dl = DataLoader(train_data, batch_size=64, shuffle=True)
     val_dl = DataLoader(val_data, batch_size=64, shuffle=True)
 
