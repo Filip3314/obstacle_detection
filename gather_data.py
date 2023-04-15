@@ -1,3 +1,5 @@
+#ROADMAP
+#TODO
 import pybullet as p
 import time
 import os
@@ -19,11 +21,7 @@ LABEL_DIR = IMAGE_FOLDER + "/" + "label"
 def linearize_depth(depth_matrix: np.ndarray[float]):
     return (FAR * NEAR / (FAR - (FAR - NEAR) * depth_matrix)).astype(np.uint8)
 
-
-# TODO add randomization of position of objects
-# TODO get more data_models
-
-robot = setup_simulator()
+robot = setup_simulator(p.DIRECT)
 
 # Define the image folder and label file
 if not os.path.exists(IMAGE_FOLDER):
@@ -37,12 +35,15 @@ else:
     for file in files:
         filepath = os.path.join(DEPTH_DIR, file)
         os.remove(filepath)
+    files = os.listdir(LABEL_DIR)
+    for file in files:
+        filepath = os.path.join(LABEL_DIR, file)
+        os.remove(filepath)
 
 if os.path.exists(LABEL_FILE):
     os.remove(LABEL_FILE)
 heights = np.loadtxt(HEIGHT_FILE, dtype=str, delimiter=',')
 objects = [Object(file, float(height)) for file, height in heights]
-# FIXME LOAD OBJECTS
 loaded_object_categories = {-1: 0}
 
 # Capture and label the images
@@ -54,8 +55,9 @@ for obj in objects:
         p.resetBasePositionAndOrientation(object_id, position, orientation)
 
         imgs = run_simulator(robot)
-
         filename = f"{obj.name}_{i}"
+
+        #Converting data from camera saveable formats
         rgb = np.reshape(imgs[2], (IMAGE_HEIGHT, IMAGE_WIDTH, 4))
         rgb = rgb.astype(np.uint8)
         depth = np.reshape(imgs[3], [IMAGE_HEIGHT, IMAGE_WIDTH])
@@ -66,6 +68,8 @@ for obj in objects:
             counts[pixel] += 1
         proportions = {category: (count / (IMAGE_HEIGHT * IMAGE_WIDTH)) for category, count in counts.items()}
         segmentation_map = np.reshape(segmentation_list, [IMAGE_HEIGHT, IMAGE_WIDTH])
+
+        #Saving all of our data
         rgb_image = Image.fromarray(rgb)
         depth_image = Image.fromarray(depth)
         np.savetxt(f"{LABEL_DIR}/{filename}_labels.csv", segmentation_map, fmt='%d', delimiter=',')
@@ -73,9 +77,7 @@ for obj in objects:
         depth_image.save(f"{DEPTH_DIR}/{filename}_depth.png")
         with open(LABEL_FILE, "a") as f:
             f.write(filename + ',' + str(proportions) + '\n')
-        time.sleep(1)
     p.removeBody(object_id)
-    time.sleep(0.1)
 
 # Disconnect PyBullet
 p.disconnect()

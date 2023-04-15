@@ -10,7 +10,7 @@ HEIGHT_FILE = 'heights.csv'
 def record_heights():
     if os.path.exists(HEIGHT_FILE):
         os.remove(HEIGHT_FILE)
-    object_files = [os.path.join(dp, f) for dp, dn, fn in os.walk("data_models") for f in fn if '.obj' in f]
+    object_files = [os.path.join(dp, f) for dp, dn, fn in os.walk("data_models") for f in fn if ('.urdf' in f or '.obj' in f) and not f.startswith('_')]
     p.connect(p.DIRECT)
 
     for file in object_files:

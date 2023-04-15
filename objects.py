@@ -7,7 +7,7 @@ TABLE_HEIGHT = 1
 
 
 class Category(Enum):
-    # Value of the enum is the size range that the object should be in, relative to the size of a standard table model
+    # Value of the enum is the size range that the object should be in, relative to the size of a standard kitchen_table1 model
     NONE = [0, 0, 0]
     HUMAN = [.5, 1.5]
     CAT = [0.1, 0.2]
@@ -55,24 +55,24 @@ class Object:
     def load_object(cls, filepath, scale):
         if ".obj" in filepath:
             scale_array = np.repeat(scale, 3)
-            visualShapeId = p.createVisualShape(
+            visual_shape_id = p.createVisualShape(
                 shapeType=p.GEOM_MESH,
                 fileName=filepath,
                 rgbaColor=None,
                 meshScale=scale_array,
             )
-            collisionShapeId = p.createCollisionShape(
+            collision_shape_id = p.createCollisionShape(
                 shapeType=p.GEOM_MESH, fileName=filepath, meshScale=scale_array
             )
-            objectId = p.createMultiBody(
+            object_id = p.createMultiBody(
                 baseMass=1.0,
-                baseCollisionShapeIndex=collisionShapeId,
-                baseVisualShapeIndex=visualShapeId
+                baseCollisionShapeIndex=collision_shape_id,
+                baseVisualShapeIndex=visual_shape_id
             )
         else:
-            objectId = p.loadURDF(filepath, globalScaling=scale)
+            object_id = p.loadURDF(filepath, globalScaling=scale)
 
-        return objectId
+        return object_id
 
     def load(self, loaded_objects):
         print(self.filepath)
