@@ -22,9 +22,9 @@ def train_models():
     # TODO add the appropriate file paths once they are available
     # TODO make sure that the training and validation data re appropriately split
     train_data = dataset.ClassificationDataset()
-    val_data = dataset.ClassificationDataset()
+    #val_data = dataset.ClassificationDataset()
     train_dl = DataLoader(train_data, batch_size=64, shuffle=True)
-    val_dl = DataLoader(val_data, batch_size=64, shuffle=True)
+    #val_dl = DataLoader(val_data, batch_size=64, shuffle=True)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -95,9 +95,11 @@ def train_models():
                 optims[i].step()
 
         # Now, we will do the validation step
+        # Also, will save the weights here
         for model in models:
+            model.save()
             model.eval()
 
-        for batch in val_dl:
-            img, label = map(lambda x: x.to('cpu'), batch)
+        #for batch in val_dl:
+        #    img, label = map(lambda x: x.to('cpu'), batch)
 

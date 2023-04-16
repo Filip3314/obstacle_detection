@@ -32,7 +32,7 @@ class PybulletDataset(Dataset):
             rgb_image = self.transform(rgb_image)
             depth_image = self.transform(depth_image)
 
-        # convert the RGB and the depth images to tensors so they can be
+        # convert the RGB and the depth images to tensors so they can be manipulated more easily
         im_to_tensor = transforms.PILToTensor()
         rgb_tensor = im_to_tensor(rgb_image)
         depth_tensor = im_to_tensor(depth_image)
@@ -57,7 +57,15 @@ class ClassificationDataset(PybulletDataset):
     def __getitem__(self, item: int):
         label = self.labels[item]
 
-        return super().__getitem__(item), label
+        # First I will take everything in the dict and put it into a list for convenience
+        label_list = []
+        for i in range(len(label)):
+            label_list.append((label[i]))
+
+        # Now, tensorize the list
+        label_tensor = torch.Tensor(label_list)
+
+        return super().__getitem__(item), label_tensor
 
 
 class SegmentationDataset(PybulletDataset):

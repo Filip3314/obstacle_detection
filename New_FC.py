@@ -36,11 +36,11 @@ class New_FC(nn.Module):
         third_layer = nn.Linear(in_features=100, out_features=100)
         fourth_layer = nn.Linear(in_features=100, out_features=100)
         fifth_layer = nn.Linear(in_features=100, out_features=100)
-        output_classifier = nn.Linear(in_features=100, out_features=100)
+        output_classifier = nn.Linear(in_features=100, out_features=24)
 
         self.model = nn.Sequential(image_flatten, first_layer, relu, second_layer, relu,
                                    third_layer, relu, fourth_layer, relu, fifth_layer, relu, output_classifier)
-        self.save_path = "New_FC_" + img_type + ".pt"
+        self.save_path = "weights/New_FC_" + img_type + ".pt"
 
     def forward(self, img: Tensor) -> Tensor:
         # Going to slice up the image so I can take the channels that are relevant for this model
@@ -58,7 +58,9 @@ class New_FC(nn.Module):
         if self.img_type == "depth":
             img = D_slice.unsqueeze(1)
 
-        return self.model(img)
+        img_floats = img.float()
+
+        return self.model(img_floats)
 
     def save(self) -> None:
         '''Save model weights to *.pt file'''

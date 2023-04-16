@@ -24,18 +24,21 @@ class VGGNet(nn.Module):
             param.requires_grad = False
 
         # This will alter the output class so we have a trainable output with our classes
-        self.pre_trained_model.fc = nn.Linear(in_features=512, out_features=100)
+        # self.pre_trained_model.fc = nn.Linear(in_features=1000, out_features=24)
+        self.pre_trained_model.classifier[6] = nn.Linear(in_features=4096, out_features=24)
 
         # Deals with restructuring the first conv based on the image type
         if img_type == "RGB":
-            first_layer = self.pre_trained_model.features[0]
+            first_layer = nn.Conv2d(3, 64, kernel_size=(7, 7), stride=(1, 1), padding=5, dilation=7)
         if img_type == "depth":
-            first_layer = nn.Conv2d(1, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            first_layer = nn.Conv2d(1, 64, kernel_size=(7, 7), stride=(1, 1), padding=5, dilation=7)
         if img_type == "RGBD":
-            first_layer = nn.Conv2d(4, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+            first_layer = nn.Conv2d(4, 64, kernel_size=(7, 7), stride=(1, 1), padding=5, dilation=7)
+            # This was the OG. Will get creative to make it the right image size. Can possibly reset to 224
+            # first_layer = nn.Conv2d(4, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
 
         self.pre_trained_model.features[0] = first_layer
-        self.save_path = "VGG_Net_" + img_type + ".pt"
+        self.save_path = "weights/VGG_Net_" + img_type + ".pt"
 
     def forward(self, img: Tensor) -> Tensor:
         # Going to slice up the image so I can take the channels that are relevant for this model
@@ -53,7 +56,9 @@ class VGGNet(nn.Module):
         if self.img_type == "depth":
             img = D_slice.unsqueeze(1)
 
-        return self.pre_trained_model(img)
+        img_floats = img.float()
+
+        return self.pre_trained_model(img_floats)
 
     def save(self) -> None:
         '''Save model weights to *.pt file'''
