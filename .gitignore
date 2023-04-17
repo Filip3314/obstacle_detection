@@ -1,4 +1,5 @@
 # project specific
+models/
 data_models/
 pybullet_models/
 

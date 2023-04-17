@@ -47,8 +47,8 @@ class Category(Enum):
 class Object:
     def __init__(self, filepath: str, height: float):
         split_path = filepath.split('/')
-        self.category = Category[split_path[1]]
-        self.name = split_path[2]
+        self.category =  Category.KITCHEN_TABLE#Category[split_path[1]]
+        self.name = 'a'
         self.filepath = filepath
         self.scale = np.random.uniform(self.category.scale[0], self.category.scale[1]) / height
 
@@ -59,7 +59,7 @@ class Object:
             visual_shape_id = p.createVisualShape(
                 shapeType=p.GEOM_MESH,
                 fileName=filepath,
-                rgbaColor=None,
+                rgbaColor=[1,1,1,1],
                 meshScale=scale_array,
             )
             collision_shape_id = p.createCollisionShape(

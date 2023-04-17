@@ -1,19 +1,8 @@
-from typing import Callable, Optional
-
-import pybullet as p
-import pybullet_data
-import time
 import math
-import os
-from PIL import Image
-import numpy as np
-from dataclasses import dataclass, field
-from enum import Enum
-from scipy.spatial.transform import Rotation as R
-import pandas as pd
-import torch
-from torch.utils.data import Dataset
-from pybullet_envs.bullet.racecar import Racecar
+
+import pybullet
+import pybullet_utils.bullet_client as bc
+import pybullet_data
 
 import objects
 
@@ -23,39 +12,37 @@ FAR = 500
 NEAR = 0.005
 DISTANCE = 100
 
-def setup_simulator(gui: int = p.GUI):
-    p.connect(gui)
-    p.setAdditionalSearchPath('pybullet_models')  # Set path to load URDFs
-    p.setGravity(0, 0, -9.81)
-    return Racecar(p)
+
+def setup_simulator(connection_mode: int = pybullet.GUI):
+    physics_client = bc.BulletClient(connection_mode=connection_mode, options="--background_color_red=1 "
+                                                                              "--background_color_blue=0 "
+                                                                              "--background_color_green=0")
+    physics_client.setAdditionalSearchPath(pybullet_data.getDataPath())  # Set path to load URDFs
+    return physics_client
 
 
 def set_robot_input_from_keyboard(robot):
-    keys = p.getKeyboardEvents()
+    keys = client.getKeyboardEvents()
     turn = 0
     forward = 0
     for k, v in keys.items():
 
-        if (k == p.B3G_RIGHT_ARROW and (v & p.KEY_IS_DOWN)):
+        if (k == client.B3G_RIGHT_ARROW and (v & client.KEY_IS_DOWN)):
             turn = -1
-        if (k == p.B3G_LEFT_ARROW and (v & p.KEY_IS_DOWN)):
+        if (k == client.B3G_LEFT_ARROW and (v & client.KEY_IS_DOWN)):
             turn = 1
 
-        if (k == p.B3G_UP_ARROW and (v & p.KEY_IS_DOWN)):
+        if (k == client.B3G_UP_ARROW and (v & client.KEY_IS_DOWN)):
             forward = 5
-        if (k == p.B3G_DOWN_ARROW and (v & p.KEY_IS_DOWN)):
+        if (k == client.B3G_DOWN_ARROW and (v & client.KEY_IS_DOWN)):
             forward = -5
 
     robot.applyAction((forward, turn))
 
 
-def run_simulator(robot):
-    set_robot_input_from_keyboard(robot)
-    p.stepSimulation()
-    robot_position, robot_orientation = p.getBasePositionAndOrientation(robot.racecarUniqueId)
-
-    yaw = p.getEulerFromQuaternion(robot_orientation)[-1]
-    xA, yA, zA = robot_position
+def run_simulator(p):
+    yaw = 0
+    xA, yA, zA = [0, 0, 0]
     zA = zA + 0.3  # make the camera a little higher than the robot
 
     # compute focusing point of the camera
@@ -82,13 +69,12 @@ def run_simulator(robot):
     )
     return imgs
 
-if __name__ == '__main__':
-    robot = setup_simulator()
-    #p.loadSDF('pybullet_models/kitchens/1.sdf')
-    p.loadURDF("plane.urdf")
-    objid, _ = objects.Object('data_models/CAT/cat2/source/12221_Cat_v1_l3.obj', 30).load({})
-    p.removeBody(objid)
-    objects.Object('data_models/TEDDY/teddy1/teddy1.urdf', 0.68).load({})
-    while True:
-        run_simulator(robot)
 
+if __name__ == '__main__':
+    client = setup_simulator()
+    client.setAdditionalSearchPath(
+        '/mnt/nvme/object_detection/ShapeNetCore.v2/02946921/adaaccc7f642dee1288ef234853f8b4d/models')  # Set path to load URDFs
+    object_id = objects.Object.load_object('model_normalized.obj', 1)
+    client.resetBasePositionAndOrientation(object_id, [1, 1, 1], [1, 1, 1, 1])
+    while True:
+        run_simulator(client)
