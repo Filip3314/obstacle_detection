@@ -42,6 +42,9 @@ class ResNet(nn.Module):
         #    self.pre_trained_model.conv1.requires_grad = False
 
         self.save_path = "weights/ResNet_" + img_type + ".pt"
+        self.train_losses = []
+        self.val_losses = []
+        self.train_record = dict(train_loss=[], val_loss=[])
 
     def forward(self, img: Tensor) -> Tensor:
         # Going to slice up the image so I can take the channels that are relevant for this model
@@ -71,4 +74,38 @@ class ResNet(nn.Module):
     def load(self) -> None:
         '''Load model weights from *.pt file'''
         self.load_state_dict(torch.load(self.save_path))
+
+    # these functions will record the training losses over a batch
+    def rec_new_train_losses(self):
+        self.train_losses = []
+
+    def append_train_losses(self, loss_item):
+        self.train_losses.append(loss_item)
+
+    def train_loss_average(self):
+        return np.mean(self.train_losses)
+
+    # Same function except for validation losses
+    def rec_new_val_losses(self):
+        self.val_losses = []
+
+    def append_val_losses(self, loss_item):
+        self.val_losses.append(loss_item)
+
+    def val_loss_average(self):
+        return np.mean(self.val_losses)
+
+    def record_train_val_loss(self):
+        self.train_record['train_loss'].append(self.train_loss_average())
+        self.train_record['val_loss'].append(self.val_loss_average())
+
+    def plot_losses(self):
+        f, ax = plt.subplots(1, 2, figsize=(7, 3))
+        ax[0].plot(self.train_record['train_loss'])
+        ax[0].set_title('Train Loss')
+        ax[1].plot(self.train_record['val_loss'])
+        ax[1].set_title('Val. Loss')
+        save_path = 'loss_curves/ResNet_' + self.img_type + '.png'
+        plt.savefig(save_path)
+        plt.close()
 
