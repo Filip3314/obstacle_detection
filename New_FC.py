@@ -104,6 +104,6 @@ class New_FC(nn.Module):
         ax[0].set_title('Train Loss')
         ax[1].plot(self.train_record['val_loss'])
         ax[1].set_title('Val. Loss')
-        save_path = 'loss_curves/ResNet_' + self.img_type + '.png'
+        save_path = 'loss_curves/FC_' + self.img_type + '.png'
         plt.savefig(save_path)
         plt.close()

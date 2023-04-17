@@ -20,10 +20,15 @@ import dataset
 def train_models(epochs=20, RGB=False, depth=True, RGBD=False):
     # Load in the datasets
     # TODO make sure that the training and validation data re appropriately split
-    train_data = dataset.ClassificationDataset()
-    #val_data = dataset.ClassificationDataset()
-    train_dl = DataLoader(train_data, batch_size=64, shuffle=True)
-    #val_dl = DataLoader(val_data, batch_size=64, shuffle=True)
+    np.random.seed(42)
+    torch.manual_seed(42)
+    g = torch.Generator()
+    g.manual_seed(42)
+
+    train_data = dataset.ClassificationDataset(rgb_dir='data/train/rgb', depth_dir='data/train/depth')
+    val_data = dataset.ClassificationDataset(rgb_dir='data/val/rgb', depth_dir='data/val/depth')
+    train_dl = DataLoader(train_data, batch_size=100, shuffle=True, num_workers=4, generator=g)
+    val_dl = DataLoader(val_data, batch_size=100, drop_last=True, num_workers=4, generator=g)
 
     criterion = nn.CrossEntropyLoss()
 
@@ -110,13 +115,12 @@ def train_models(epochs=20, RGB=False, depth=True, RGBD=False):
             # Applies the __getitem__ function to the batch to return the image and label
             # to('cpu') indicates that this tensor should be prepped for running on the CPU instead
             # of a GPU
-            model_num = 1
             batch_num = batch_num + 1
             img, label = map(lambda x: x.to('cpu'), batch)
 
             # This will train each of the models on the same batch
             for i in range(len(models)):
-                pbar.set_description(f'current_batch={batch_num:.0f}, current_model={model_num:.0f}')
+                pbar.set_description(f'training, current_batch={batch_num:.0f}, current_model={i:.0f}')
                 logits = models[i].forward(img)
                 loss = criterion(logits, label)
                 models[i].append_train_losses(loss.item())
@@ -124,7 +128,6 @@ def train_models(epochs=20, RGB=False, depth=True, RGBD=False):
                 optims[i].zero_grad()
                 loss.backward()
                 optims[i].step()
-                model_num = model_num + 1
 
         # Now, we will do the validation step
         # Also, will save the weights here
@@ -132,6 +135,19 @@ def train_models(epochs=20, RGB=False, depth=True, RGBD=False):
             model.save()
             model.eval()
             model.rec_new_val_losses()
+
+        batch_num = 0
+        for batch in val_dl:
+            img, label = map(lambda x: x.to('cpu'), batch)
+            batch_num = batch_num + 1
+
+            with torch.no_grad():
+                for i in range(len(models)):
+                    pbar.set_description(f'validating, current_batch={batch_num:.0f}, current_model={i:.0f}')
+                    logits = models[i].forward(img)
+                    loss = criterion(logits, label)
+                    models[i].append_val_losses(loss.item())
+
 
         #for batch in val_dl:
         #    img, label = map(lambda x: x.to('cpu'), batch)
@@ -146,4 +162,4 @@ def train_models(epochs=20, RGB=False, depth=True, RGBD=False):
 
 
 if __name__ == "__main__":
-    train_models(3, RGB=True, depth=True, RGBD=True)
+    train_models(15, RGB=True, depth=True, RGBD=True)
