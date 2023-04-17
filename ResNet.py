@@ -26,7 +26,7 @@ class ResNet(nn.Module):
             param.requires_grad = False
 
         # This will alter the output class so we have a trainable output with our classes
-        self.pre_trained_model.fc = nn.Linear(in_features=512, out_features=24)
+        self.pre_trained_model.fc = nn.Linear(in_features=512, out_features=56)
 
         # Now we will handle the different image types - will only alter the first layer, the rest will be the same
         if img_type == "RGB":

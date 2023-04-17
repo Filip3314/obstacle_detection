@@ -3,6 +3,7 @@ import os
 
 import numpy as np
 import torch
+import pandas as pd
 
 from torch.utils.data import Dataset
 from PIL import Image
@@ -18,6 +19,9 @@ class PybulletDataset(Dataset):
         # assert len(rgb_dir) == len(depth_dir)
         self.rgb_filenames = sorted(os.listdir(rgb_dir))
         self.depth_filenames = sorted(os.listdir(depth_dir))
+
+        # Until I think of something better, this is just going to hold the order of the classes
+        self.output_classes = [3207941, 4530566, 2958343, 4256520, 3797390, 2871439, 2818832, 2992529, 2801938, 3991062, 4090263, 4330267, 3001627, 3325088, 2843684, 4468005, 3636649, 2747177, 3948459, 2808440, 2880940, 3790512, 3513137, 3928116, 3337140, 3642806, 3593526, 3761084, 4554684, 4401088, 3691459, 3938244, 4225987, 3624134, 2773838, 3261776, 3759954, 4074963, 2828884, 2691156, 3085013, 2924116, 4460130, 2954340, 4099429, 2946921, 2942699, 4379243, 3211117, 3710193, 2876657, 3046257, 2933112, 4004475, 3467517, -1]
 
     def __len__(self):
         return len(self.rgb_filenames)
@@ -49,21 +53,36 @@ class ClassificationDataset(PybulletDataset):
     def __init__(self, rgb_dir: str = 'data/rgb', depth_dir: str = 'data/depth', labels_file: str = 'labels.txt',
                  transform=None):
         super().__init__(rgb_dir, depth_dir, transform)
-        self.labels = []
-        with open('labels.txt') as file:
-            for line in file:
-                self.labels.append(ast.literal_eval(line))
+
+        # I am going to open the labels as a dataframe and sort.
+        # Then, I will just extract the label value, which will be accessed in __getitem__
+        # I will construct the tensor in __getitem__
+        raw_label_data = pd.read_csv(labels_file, sep='|', header=None, usecols=[0, 1])
+        sorted_label_data = raw_label_data.sort_values(by=0)
+        self.labels = list(sorted_label_data[1])
+
+        # self.labels = []
+        # with open(labels_file) as file:
+        #    for line in file:
+        #        self.labels.append(ast.literal_eval(line))
 
     def __getitem__(self, item: int):
-        label = self.labels[item]
+        label_val = self.labels[item]
+        label = np.zeros_like(self.output_classes)
+        label_idx = self.output_classes.index(label_val)
+
+        label[label_idx] = 1
+
+        #tensorize
+        label_tensor = torch.Tensor(label)
 
         # First I will take everything in the dict and put it into a list for convenience
-        label_list = []
-        for i in range(len(label)):
-            label_list.append((label[i]))
+        # label_list = []
+        #for i in range(len(label)):
+        #    label_list.append((label[i]))
 
         # Now, tensorize the list
-        label_tensor = torch.Tensor(label_list)
+        # label_tensor = torch.Tensor(label_list)
 
         return super().__getitem__(item), label_tensor
 

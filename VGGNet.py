@@ -25,7 +25,7 @@ class VGGNet(nn.Module):
 
         # This will alter the output class so we have a trainable output with our classes
         # self.pre_trained_model.fc = nn.Linear(in_features=1000, out_features=24)
-        self.pre_trained_model.classifier[6] = nn.Linear(in_features=4096, out_features=24)
+        self.pre_trained_model.classifier[6] = nn.Linear(in_features=4096, out_features=56)
 
         # Deals with restructuring the first conv based on the image type
         if img_type == "RGB":

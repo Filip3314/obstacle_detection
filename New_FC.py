@@ -36,7 +36,7 @@ class New_FC(nn.Module):
         third_layer = nn.Linear(in_features=100, out_features=100)
         fourth_layer = nn.Linear(in_features=100, out_features=100)
         fifth_layer = nn.Linear(in_features=100, out_features=100)
-        output_classifier = nn.Linear(in_features=100, out_features=24)
+        output_classifier = nn.Linear(in_features=100, out_features=56)
 
         self.model = nn.Sequential(image_flatten, first_layer, relu, second_layer, relu,
                                    third_layer, relu, fourth_layer, relu, fifth_layer, relu, output_classifier)

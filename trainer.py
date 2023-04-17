@@ -104,15 +104,19 @@ def train_models(epochs=20, RGB=False, depth=True, RGBD=False):
             model.rec_new_train_losses()
 
         # Now, we will iterate through the batch provided by the dataloader
+        batch_num = 0
 
         for batch in train_dl:
             # Applies the __getitem__ function to the batch to return the image and label
             # to('cpu') indicates that this tensor should be prepped for running on the CPU instead
             # of a GPU
+            model_num = 1
+            batch_num = batch_num + 1
             img, label = map(lambda x: x.to('cpu'), batch)
 
             # This will train each of the models on the same batch
             for i in range(len(models)):
+                pbar.set_description(f'current_batch={batch_num:.0f}, current_model={model_num:.0f}')
                 logits = models[i].forward(img)
                 loss = criterion(logits, label)
                 models[i].append_train_losses(loss.item())
@@ -120,6 +124,7 @@ def train_models(epochs=20, RGB=False, depth=True, RGBD=False):
                 optims[i].zero_grad()
                 loss.backward()
                 optims[i].step()
+                model_num = model_num + 1
 
         # Now, we will do the validation step
         # Also, will save the weights here
@@ -139,3 +144,6 @@ def train_models(epochs=20, RGB=False, depth=True, RGBD=False):
             model.record_train_val_loss()
             model.plot_losses()
 
+
+if __name__ == "__main__":
+    train_models(3, RGB=True, depth=True, RGBD=True)
