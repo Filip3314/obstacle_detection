@@ -7,6 +7,8 @@ import os
 from PIL import Image
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+import multiprocessing
+import gc
 
 from run_simulator import setup_simulator, run_simulator
 
@@ -80,20 +82,29 @@ if os.path.exists(LABEL_FILE):
     os.remove(LABEL_FILE)
 
 object_files = dict()
-categories = {-1}
+object_categories = {-1}
 for dp, dn, fn in os.walk(MODEL_DIR):
     for f in fn:
         if '.obj' in f:
             filepath = os.path.join(dp, f)
             split_dir = filepath.split('/')
             category = int(split_dir[-4])
-            categories.add(category)
+            object_categories.add(category)
             object_files[filepath] = category
 
-counter = ThreadSafeCounter()
 
-
-def gather_data(models):
+def gather_data(models, categories):
+    IMAGE_FOLDER = "data"
+    RGB_DIR = IMAGE_FOLDER + "/" + "rgb"
+    DEPTH_DIR = IMAGE_FOLDER + "/" + "depth"
+    LABEL_FILE = "labels.txt"
+    LABEL_DIR = IMAGE_FOLDER + "/" + "label"
+    IMAGES_PER_MODEL = 10
+    IMAGE_HEIGHT = 256
+    IMAGE_WIDTH = 256
+    FAR = 500
+    NEAR = 0.005
+    DISTANCE = 100
     client = setup_simulator(p.DIRECT)
 
     view_matrix = p.computeViewMatrix(
@@ -132,18 +143,21 @@ def gather_data(models):
             for pixel in segmentation_list:
                 counts[pixel] += 1
             proportions = {category: (count / (IMAGE_HEIGHT * IMAGE_WIDTH)) for category, count in counts.items()}
-            segmentation_map = np.reshape(segmentation_list, [IMAGE_HEIGHT, IMAGE_WIDTH])
+            #segmentation_map = np.reshape(segmentation_list, [IMAGE_HEIGHT, IMAGE_WIDTH])
 
-            img_number = counter.increment()
+            with counter.get_lock():
+                counter.value += 1
+                img_number = counter.value
             # Saving all of our data
             rgb_image = Image.fromarray(rgb)
             depth_image = Image.fromarray(depth)
             rgb_image.save(f"{RGB_DIR}/{img_number}_rgb.png")
             depth_image.save(f"{DEPTH_DIR}/{img_number}_depth.png")
-            np.savetxt(f"{LABEL_DIR}/{img_number}_labels.csv", segmentation_map, fmt='%d', delimiter=',')
+            #np.savetxt(f"{LABEL_DIR}/{img_number}_labels.csv", segmentation_map, fmt='%d', delimiter=',')
             with open(LABEL_FILE, "a") as f:
                 f.write(f'{img_number}|{obj_category}|' + str(proportions) + '\n')
-        client.removeBody(object_id)
+        client.resetSimulation()
+        gc.collect()
 
     # Disconnect PyBullet
     client.disconnect()
@@ -151,10 +165,20 @@ def gather_data(models):
 
 if __name__ == '__main__':
     num_threads = int(sys.argv[1])
-    size = int(len(object_files) / num_threads) + 1
+    size = 1000 #int(len(object_files) / num_threads) + 1
     data_chunks = split_data(object_files, size)
-    threads = []
-    for data_chunk in data_chunks:
-        threads.append(threading.Thread(target=gather_data, args=[data_chunk]))
-    for thread in threads:
-        thread.start()
+    global counter
+    counter = multiprocessing.Value('i', 0)
+    pool = multiprocessing.Pool(processes=num_threads, maxtasksperchild=5)
+
+    tasks = [pool.apply_async(gather_data, (chunk, object_categories)) for chunk in
+             data_chunks]
+    for f in tasks:
+        f.get()
+
+    print("calc done")
+    print("closing pool")
+    pool.close()
+    print("joining pool")
+    pool.join()
+    print("joined pool")
